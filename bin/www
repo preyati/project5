@@ -12,7 +12,8 @@ var http = require("http");
  * Create HTTP server.
  */
 getApp().then((app) => {
-  var port = app.get("port");
+  var port = process.env.PORT || 3000; // Azure provides PORT env variable
+  app.set("port", port);
   var server = http.createServer(app);
 
   /**
