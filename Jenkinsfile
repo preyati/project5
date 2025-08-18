@@ -36,6 +36,38 @@ pipeline {
             }
         }
 
+        stage('Download Artifact') {
+            steps {
+                copyArtifacts(
+                    projectName: 'jenkin_project5',
+                    filter: ARTIFACT_NAME,
+                    fingerprintArtifacts: true
+                )
+            }
+        }
+
+        stage('Login to Azure') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'az-sp', usernameVariable: 'AZURE_APP_ID', passwordVariable: 'AZURE_PASSWORD'),
+                    string(credentialsId: 'azure-tenant', variable: 'AZURE_TENANT')
+                ]) {
+                    sh "az login --service-principal -u $AZURE_APP_ID -p $AZURE_PASSWORD --tenant $AZURE_TENANT"
+                }
+            }
+        }
+
+        stage('Deploy to Azure Web App') {
+            steps {
+                sh '''
+                    echo "Deploying $ARTIFACT_NAME to Azure Web App: $AZURE_WEBAPP_NAME"
+                    az webapp deployment source config-zip \
+                      --resource-group $AZURE_RESOURCE_GROUP \
+                      --name $AZURE_WEBAPP_NAME \
+                      --src $ARTIFACT_NAME
+                '''
+            }
+        }
        
     }
 }
